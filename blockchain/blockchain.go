@@ -24,7 +24,8 @@ func InitBlockChain() *BlockChain {
 	var lastHash []byte
 
 	// where to store
-	db, err := badger.Open(badger.DefaultOptions(dbPath))
+	opts := badger.DefaultOptions(dbPath)
+	db, err := badger.Open(opts.WithLogger(nil)) //turning logs of badger off
 	Handle(err)
 
 	// add genesis or get access from disk to find its last hash
