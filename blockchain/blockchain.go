@@ -24,11 +24,7 @@ func InitBlockChain() *BlockChain {
 	var lastHash []byte
 
 	// where to store
-	opts := badger.DefaultOptions
-	opts.Dir = dbPath
-	opts.ValueDir = dbPath
-
-	db, err := badger.Open(opts)
+	db, err := badger.Open(badger.DefaultOptions(dbPath))
 	Handle(err)
 
 	// add genesis or get access from disk to find its last hash
@@ -48,7 +44,13 @@ func InitBlockChain() *BlockChain {
 		} else {
 			item, err := txn.Get([]byte("lh"))
 			Handle(err)
-			lastHash, err = item.Value()
+
+			err = item.Value(func(val []byte) error {
+				lastHash = val
+
+				return nil
+			})
+
 			return err
 
 		}
@@ -67,7 +69,12 @@ func (chain *BlockChain) AddBlock(data string) {
 	err := chain.Database.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte("lh"))
 		Handle(err)
-		lastHash, err = item.Value()
+
+		err = item.Value(func(val []byte) error {
+			lastHash = val
+
+			return nil
+		})
 
 		return err
 	})
@@ -103,7 +110,14 @@ func (iter *BlockChainIterator) Next() *Block {
 	err := iter.Database.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(iter.CurrentHash)
 		Handle(err)
-		encodedBlock, err := item.Value()
+		//encodedBlock, err := item.Value()
+		var encodedBlock []byte
+		err = item.Value(func(val []byte) error {
+			encodedBlock = val
+
+			return nil
+		})
+
 		block = DeSerialize(encodedBlock)
 
 		return err
