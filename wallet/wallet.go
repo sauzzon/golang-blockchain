@@ -4,11 +4,11 @@ package wallet
 // and then derive address from the public key
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
-	"fmt"
 	"log"
 
 	"golang.org/x/crypto/ripemd160"
@@ -34,11 +34,22 @@ func (w Wallet) Address() []byte {
 	fullHash := append(versionedHash, checksum...)
 	address := Base58Encode(fullHash)
 
-	fmt.Printf("pub key:%x\n", w.PublicKey)
-	fmt.Printf("pub hash:%x\n", pubHash)
-	fmt.Printf("address:%x\n", address)
+	// fmt.Printf("pub key:%x\n", w.PublicKey)
+	// fmt.Printf("pub hash:%x\n", pubHash)
+	// fmt.Printf("address:%x\n", address)
 
 	return address
+}
+
+// reverse
+func ValidateAddress(address string) bool {
+	fullHash := Base58Decode([]byte(address))
+	actualChecksum := fullHash[len(fullHash)-checksumLength:]
+	version := fullHash[0]
+	pubKeyHash := fullHash[1 : len(fullHash)-checksumLength]
+	targetChecksum := Checksum(append([]byte{version}, pubKeyHash...))
+
+	return bytes.Compare(actualChecksum, targetChecksum) == 0
 }
 
 func NewKeyPair() (ecdsa.PrivateKey, []byte) {
