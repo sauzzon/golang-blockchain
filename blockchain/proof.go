@@ -17,7 +17,7 @@ import (
 // Requirements:
 // The first few bytes must contain 0s
 
-const Difficulty = 21
+const Difficulty = 18
 
 type ProofOfWork struct {
 	Block  *Block
